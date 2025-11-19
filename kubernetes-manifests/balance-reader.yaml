@@ -1,17 +1,3 @@
-# Copyright 2024 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -42,7 +28,7 @@ metadata:
     environment: development
     team: ledger
     tier: backend
-    version: v1  # ← 추가됨
+    version: v1
   name: balancereader
 spec:
   selector:
@@ -62,7 +48,7 @@ spec:
         environment: development
         team: ledger
         tier: backend
-        version: v1  # ← 추가됨
+        version: v1
     spec:
       containers:
         - env:
@@ -91,22 +77,34 @@ spec:
                 name: environment-config
             - configMapRef:
                 name: ledger-db-config
-          image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/balancereader:v0.6.7@sha256:3b46d0274fb47a99415678aefcc55d2844d87e694c5ae4a796da8719c08e9ef0
+          image: us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/balancereader:v0.6.7
+          name: balancereader
+
+          startupProbe:
+            httpGet:
+              path: /healthy
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 60
+
           livenessProbe:
             httpGet:
               path: /healthy
               port: 8080
             initialDelaySeconds: 120
-            periodSeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 10
-          name: balancereader
+            failureThreshold: 10
+
           readinessProbe:
             httpGet:
               path: /ready
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 5
             timeoutSeconds: 10
+            failureThreshold: 10
+
           resources:
             limits:
               cpu: 500m
@@ -116,32 +114,14 @@ spec:
               cpu: 100m
               ephemeral-storage: 0.5Gi
               memory: 256Mi
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - all
-            privileged: false
-            readOnlyRootFilesystem: true
-          startupProbe:
-            failureThreshold: 30
-            httpGet:
-              path: /healthy
-              port: 8080
-            periodSeconds: 10
+
           volumeMounts:
             - mountPath: /tmp
               name: tmp
             - mountPath: /tmp/.ssh
               name: publickey
               readOnly: true
-      securityContext:
-        fsGroup: 1000
-        runAsGroup: 1000
-        runAsNonRoot: true
-        runAsUser: 1000
-      serviceAccountName: bank-of-anthos
-      terminationGracePeriodSeconds: 5
+
       volumes:
         - emptyDir: {}
           name: tmp
@@ -151,3 +131,4 @@ spec:
               - key: jwtRS256.key.pub
                 path: publickey
             secretName: jwt-key
+

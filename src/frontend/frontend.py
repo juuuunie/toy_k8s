@@ -649,6 +649,12 @@ def create_app():
         date = datetime.datetime.strptime(timestamp, app.config['TIMESTAMP_FORMAT'])
         return date.strftime('%b')
 
+    # [수정됨] 전체 날짜 포맷 함수 추가
+    def format_timestamp_full(timestamp):
+        """ Format the input timestamp to YYYY-MM-DD HH:MM:SS """
+        date = datetime.datetime.strptime(timestamp, app.config['TIMESTAMP_FORMAT'])
+        return date.strftime('%Y-%m-%d %H:%M:%S')
+
     def format_currency(int_amount):
         """ Format the input currency in a human readable way """
         if int_amount is None:
@@ -716,6 +722,8 @@ def create_app():
     app.jinja_env.globals.update(format_currency=format_currency)
     app.jinja_env.globals.update(format_timestamp_month=format_timestamp_month)
     app.jinja_env.globals.update(format_timestamp_day=format_timestamp_day)
+    # [수정됨] 새로 만든 함수 등록
+    app.jinja_env.globals.update(format_timestamp_full=format_timestamp_full)
 
     # Set up logging
     app.logger.handlers = logging.getLogger('gunicorn.error').handlers

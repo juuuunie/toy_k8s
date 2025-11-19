@@ -32,7 +32,7 @@ spec:
     environment: development
     team: frontend
     tier: web
-  type: LoadBalancer
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -101,7 +101,7 @@ spec:
                 name: environment-config
             - configMapRef:
                 name: service-api-config
-          image: tlsrlgo/frontend:v9
+          image: tlsrlgo/frontend:v11
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
